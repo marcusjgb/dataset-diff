@@ -1,0 +1,41 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors / IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.userossc
+*.sln.docstates
+*.swp
+*.swo
+*~
+
+# Build / temp
+dist/
+build/
+tmp/
+temp/
+.cache/
+coverage/
+
+# Dependencies (if you add tooling later)
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+
+# Project-specific
+*.local
+stitch_minimalist_csv_comparator/

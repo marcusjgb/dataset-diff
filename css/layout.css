@@ -1,0 +1,218 @@
+.page-shell {
+  width: min(100%, var(--container-width));
+  margin: 0 auto;
+  padding: var(--gutter);
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) 0 var(--space-6);
+}
+
+.topbar__brand {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.topbar__status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.app-main {
+  display: grid;
+  gap: var(--space-6);
+  padding-bottom: var(--space-7);
+}
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.upload-grid .section-heading,
+.config-panel .section-heading,
+.schema-strip .section-heading,
+.summary-grid__heading {
+  grid-column: 1 / -1;
+}
+
+.upload-grid,
+.config-panel,
+.schema-strip,
+.summary-grid,
+.results-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  position: relative;
+}
+
+.upload-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.upload-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.upload-card__details {
+  min-height: 2.5rem;
+  color: var(--color-text-soft);
+  font-size: 0.7rem;
+}
+
+.paste-box {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: rgba(17, 17, 17, 0.02);
+  border: 1px solid var(--color-border);
+}
+
+.paste-box__label {
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+}
+
+.paste-box__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  color: var(--color-text-soft);
+}
+
+.paste-box__toggle input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #111111;
+}
+
+.paste-box__textarea {
+  width: 100%;
+  min-height: 8.5rem;
+  resize: vertical;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  line-height: 1.45;
+}
+
+.paste-box__textarea::placeholder {
+  color: rgba(16, 16, 16, 0.38);
+}
+
+.paste-box__hint {
+  font-size: 0.75rem;
+  color: var(--color-text-soft);
+}
+
+.file-dropzone {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.file-dropzone__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.config-panel__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-4);
+}
+
+.schema-strip__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.summary-grid__heading {
+  margin-bottom: var(--space-1);
+}
+
+.results-panel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.results-panel__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.message-stack {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.table-shell {
+  overflow: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+.results-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}

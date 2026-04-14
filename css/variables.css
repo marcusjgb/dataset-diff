@@ -1,0 +1,36 @@
+:root {
+  --color-bg: #f7f7f5;
+  --color-surface: #f2f2ef;
+  --color-surface-2: #ffffff;
+  --color-surface-3: #e9e9e6;
+  --color-text: #101010;
+  --color-text-soft: #5e5e5b;
+  --color-border: rgba(16, 16, 16, 0.08);
+  --color-border-strong: rgba(16, 16, 16, 0.16);
+  --color-accent: #111111;
+  --color-accent-contrast: #f7f7f5;
+  --color-warn: #b55a00;
+  --color-danger-bg: #ece6e2;
+  --color-danger-text: #5e2500;
+  --color-success-bg: #e6ece7;
+  --color-success-text: #17381e;
+  --color-muted-bg: #ececea;
+  --color-muted-text: #6a6a66;
+  --shadow-soft: 0 18px 50px rgba(16, 16, 16, 0.06);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --container-width: 1440px;
+  --gutter: clamp(1rem, 2vw, 2rem);
+  --space-1: 0.5rem;
+  --space-2: 0.75rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+  --space-6: 3rem;
+  --space-7: 4rem;
+  --space-8: 5rem;
+  --font-headline: "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-label: "Space Grotesk", system-ui, sans-serif;
+}

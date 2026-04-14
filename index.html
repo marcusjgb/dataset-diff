@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="datasetdiff is a minimalist CSV comparator that runs fully in the browser." />
+  <title>datasetdiff | CSV comparator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="topbar__brand">
+        <p class="eyebrow">datasetdiff</p>
+        <h1>CSV reconciliation in the browser</h1>
+        <p class="lede">Compare two CSV files, detect new, deleted, modified, and unchanged rows, then export the discrepancies.</p>
+      </div>
+      <div class="topbar__status">
+        <span id="app-status" class="status-pill status-pill--idle" aria-live="polite">Waiting for files</span>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="upload-grid" aria-labelledby="upload-heading">
+        <div class="section-heading">
+          <p class="eyebrow">1. Load files</p>
+          <h2 id="upload-heading">Choose two CSV datasets to compare</h2>
+        </div>
+
+        <div class="upload-card" data-side="a">
+          <div class="upload-card__header">
+            <span class="eyebrow">Dataset A</span>
+            <span class="upload-card__meta" id="file-a-meta">No file selected</span>
+          </div>
+          <label class="file-dropzone" for="file-a-input">
+            <span class="file-dropzone__title">Upload source CSV</span>
+            <span class="file-dropzone__hint">CSV only, headers required</span>
+            <span class="button button--ghost">Choose file</span>
+          </label>
+          <input id="file-a-input" class="sr-only" type="file" accept=".csv,text/csv" />
+          <div class="paste-box">
+            <label class="paste-box__label" for="paste-a-input">Or paste CSV for Dataset A</label>
+            <label class="paste-box__toggle">
+              <input id="paste-a-has-header" type="checkbox" />
+              <span>Los datos incluyen headers</span>
+            </label>
+            <textarea id="paste-a-input" class="paste-box__textarea" rows="8" placeholder="Paste CSV content here"></textarea>
+            <p class="paste-box__hint">Modo TOAD: separador por tab estricto.</p>
+            <button id="paste-a-btn" class="button button--secondary button--small" type="button">Use pasted CSV</button>
+          </div>
+          <div id="file-a-details" class="upload-card__details">Awaiting upload.</div>
+        </div>
+
+        <div class="upload-card" data-side="b">
+          <div class="upload-card__header">
+            <span class="eyebrow">Dataset B</span>
+            <span class="upload-card__meta" id="file-b-meta">No file selected</span>
+          </div>
+          <label class="file-dropzone" for="file-b-input">
+            <span class="file-dropzone__title">Upload reference CSV</span>
+            <span class="file-dropzone__hint">The app compares this file against Dataset A</span>
+            <span class="button button--ghost">Choose file</span>
+          </label>
+          <input id="file-b-input" class="sr-only" type="file" accept=".csv,text/csv" />
+          <div class="paste-box">
+            <label class="paste-box__label" for="paste-b-input">Or paste CSV for Dataset B</label>
+            <label class="paste-box__toggle">
+              <input id="paste-b-has-header" type="checkbox" />
+              <span>Los datos incluyen headers</span>
+            </label>
+            <textarea id="paste-b-input" class="paste-box__textarea" rows="8" placeholder="Paste CSV content here"></textarea>
+            <p class="paste-box__hint">Modo TOAD: separador por tab estricto.</p>
+            <button id="paste-b-btn" class="button button--secondary button--small" type="button">Use pasted CSV</button>
+          </div>
+          <div id="file-b-details" class="upload-card__details">Awaiting upload.</div>
+        </div>
+      </section>
+
+      <section class="config-panel" aria-labelledby="config-heading">
+        <div class="section-heading section-heading--compact">
+          <p class="eyebrow">2. Configure</p>
+          <h2 id="config-heading">Select the common key</h2>
+        </div>
+
+        <div class="config-panel__body">
+          <div class="field">
+            <label for="key-select">Primary key</label>
+            <div class="select-shell">
+              <select id="key-select" disabled>
+                <option value="">Upload both files to detect shared columns</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="paste-compare-btn" class="button button--secondary" type="button">Paste and compare</button>
+          <button id="compare-btn" class="button button--primary" disabled>Compare datasets</button>
+          <button id="reset-btn" class="button button--ghost" type="button">Reset</button>
+        </div>
+      </section>
+
+      <section class="schema-strip" id="schema-strip" hidden aria-labelledby="schema-heading">
+        <div class="schema-strip__header section-heading section-heading--compact">
+          <p class="eyebrow">Schema delta</p>
+          <h2 id="schema-heading">Columns present in only one file</h2>
+        </div>
+        <div class="schema-strip__grid">
+          <div class="schema-chip">
+            <span class="schema-chip__label">Only in A</span>
+            <div class="schema-chip__value" id="only-in-a">-</div>
+          </div>
+          <div class="schema-chip">
+            <span class="schema-chip__label">Only in B</span>
+            <div class="schema-chip__value" id="only-in-b">-</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="summary-grid" aria-labelledby="summary-heading">
+        <div class="section-heading section-heading--compact summary-grid__heading">
+          <p class="eyebrow">3. Summary</p>
+          <h2 id="summary-heading">Reconciliation overview</h2>
+        </div>
+
+        <article class="summary-card">
+          <span class="summary-card__label">Rows in A</span>
+          <strong class="summary-card__value" id="summary-a">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-card__label">Rows in B</span>
+          <strong class="summary-card__value" id="summary-b">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-card__label">New rows</span>
+          <strong class="summary-card__value" id="summary-new">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-card__label">Deleted rows</span>
+          <strong class="summary-card__value" id="summary-deleted">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-card__label">Modified rows</span>
+          <strong class="summary-card__value" id="summary-modified">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-card__label">Unchanged rows</span>
+          <strong class="summary-card__value" id="summary-unchanged">0</strong>
+        </article>
+      </section>
+
+      <section class="results-panel" aria-labelledby="results-heading">
+        <div class="results-panel__header">
+          <div>
+            <p class="eyebrow">4. Results</p>
+            <h2 id="results-heading">Delta analysis</h2>
+            <p id="results-caption" class="results-panel__caption">Load both files to see the comparison.</p>
+          </div>
+          <button id="export-btn" class="button button--secondary" disabled>Export discrepancies</button>
+        </div>
+
+        <div id="message-stack" class="message-stack" aria-live="polite"></div>
+
+        <div class="table-toolbar">
+          <div id="result-count" class="table-toolbar__count">0 discrepancies</div>
+          <div class="pagination">
+            <button id="prev-page" class="button button--ghost button--small" disabled>Prev</button>
+            <span id="page-indicator" class="pagination__indicator">Page 1 of 1</span>
+            <button id="next-page" class="button button--ghost button--small" disabled>Next</button>
+          </div>
+        </div>
+
+        <div class="table-shell">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Primary key</th>
+                <th>Attribute</th>
+                <th>Value in A</th>
+                <th>Value in B</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody id="results-tbody">
+              <tr>
+                <td colspan="6" class="table-empty">No comparison has been run yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/csv-parser.js"></script>
+  <script src="js/comparator.js"></script>
+  <script src="js/exporter.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
