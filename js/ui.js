@@ -170,11 +170,11 @@
 
       const valueACell = document.createElement("td");
       valueACell.className = "result-value";
-      appendValueWithDiff(valueACell, row.valueA, row.valueB, "a", row.type);
+      appendValueWithDiff(valueACell, row, "a");
 
       const valueBCell = document.createElement("td");
       valueBCell.className = "result-value";
-      appendValueWithDiff(valueBCell, row.valueA, row.valueB, "b", row.type);
+      appendValueWithDiff(valueBCell, row, "b");
 
       const noteCell = document.createElement("td");
       noteCell.className = "result-note";
@@ -190,89 +190,63 @@
     });
   }
 
-  function appendValueWithDiff(cell, valueA, valueB, side, type) {
-    const left = String(valueA ?? "");
-    const right = String(valueB ?? "");
-
-    if (type !== "modified") {
-      cell.textContent = side === "a" ? left : right;
-      return;
-    }
-
-    const diff = findInlineDiff(left, right);
-    if (!diff.changed) {
-      cell.textContent = side === "a" ? left : right;
-      return;
-    }
-    cell.classList.add("result-value--changed");
-
+  function appendValueWithDiff(cell, row, side) {
+    const left = String(row.valueA ?? "");
+    const right = String(row.valueB ?? "");
     const value = side === "a" ? left : right;
-    const startRaw = side === "a" ? diff.startA : diff.startB;
-    const endRaw = side === "a" ? diff.endA : diff.endB;
-    const expanded = expandDiffToToken(value, startRaw, endRaw);
-    const start = expanded.start;
-    const end = expanded.end;
+    const shouldHighlight = shouldHighlightCell(row, side);
 
-    if (start > 0) {
-      cell.appendChild(document.createTextNode(value.slice(0, start)));
+    if (!shouldHighlight || isPlaceholderValue(value)) {
+      cell.textContent = value;
+      return;
     }
 
+    cell.classList.add("result-value--changed");
+    const block = document.createElement("span");
+    block.className = "result-value-block";
     const mark = document.createElement("mark");
     mark.className = "diff-mark";
-    mark.textContent = value.slice(start, end);
-    cell.appendChild(mark);
-
-    if (end < value.length) {
-      cell.appendChild(document.createTextNode(value.slice(end)));
-    }
+    mark.textContent = value;
+    block.appendChild(mark);
+    cell.appendChild(block);
   }
 
-  function findInlineDiff(a, b) {
-    const maxPrefix = Math.min(a.length, b.length);
-    let prefix = 0;
-    while (prefix < maxPrefix && a[prefix] === b[prefix]) {
-      prefix += 1;
-    }
-
-    if (prefix === a.length && prefix === b.length) {
-      return { changed: false, startA: 0, endA: 0, startB: 0, endB: 0 };
-    }
-
-    let suffix = 0;
-    const maxSuffix = Math.min(a.length - prefix, b.length - prefix);
-    while (
-      suffix < maxSuffix &&
-      a[a.length - 1 - suffix] === b[b.length - 1 - suffix]
-    ) {
-      suffix += 1;
-    }
-
-    return {
-      changed: true,
-      startA: prefix,
-      endA: a.length - suffix,
-      startB: prefix,
-      endB: b.length - suffix,
-    };
+  function isPlaceholderValue(value) {
+    const normalized = String(value ?? "").trim().toLowerCase();
+    return normalized === "present" || normalized === "missing";
   }
 
-  function expandDiffToToken(value, start, end) {
-    let left = start;
-    let right = end;
-
-    while (left > 0 && !isSeparator(value[left - 1])) {
-      left -= 1;
+  function shouldHighlightCell(row, side) {
+    if (!row || !row.type) {
+      return false;
     }
 
-    while (right < value.length && !isSeparator(value[right])) {
-      right += 1;
+    if (row.type === "modified") {
+      return true;
     }
 
-    return { start: left, end: right };
-  }
+    if (row.type === "deleted") {
+      // Highlight the side that still has the value (lost from the other dataset).
+      return side === "a";
+    }
 
-  function isSeparator(char) {
-    return /\s|,|;|\|/.test(char);
+    if (row.type === "new") {
+      // Highlight the side that has the concrete value.
+      return side === "b";
+    }
+
+    if (row.type === "schema") {
+      const status = String(row.status || "").toLowerCase();
+      if (status.includes("only in a")) {
+        return side === "a";
+      }
+      if (status.includes("only in b")) {
+        return side === "b";
+      }
+      return true;
+    }
+
+    return false;
   }
 
   function getCurrentPage() {

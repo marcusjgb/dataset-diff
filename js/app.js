@@ -115,7 +115,7 @@
     state.loading[side] = true;
     state.comparison = null;
     UI.setResults(null);
-    UI.setStatus("warn", `Parsing pasted CSV ${side.toUpperCase()}`);
+    UI.setStatus("warn", `Parsing pasted data ${side.toUpperCase()}`);
     refreshUi();
 
     try {
@@ -128,7 +128,7 @@
       }
 
       if (!Utils.normalizeCellValue(rawText)) {
-        throw new Error("Paste a CSV block before parsing.");
+        throw new Error("Paste CSV or JSON data before parsing.");
       }
 
       document.getElementById(`file-${side}-input`).value = "";
@@ -139,7 +139,7 @@
       state.loading[side] = false;
       state[`dataset${side.toUpperCase()}`] = null;
       UI.setUploadState(side, null);
-      state.messages = [{ type: "error", text: error.message || "Unable to parse the pasted CSV." }];
+      state.messages = [{ type: "error", text: error.message || "Unable to parse pasted data." }];
       UI.setResults(null);
       refreshUi();
       return false;

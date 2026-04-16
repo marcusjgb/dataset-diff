@@ -20,7 +20,7 @@
   function parseCsvText(text, fileName, options) {
     return new Promise((resolve, reject) => {
       if (!Utils.normalizeCellValue(text)) {
-        reject(new Error("Paste a CSV block before parsing."));
+        reject(new Error("Paste CSV or JSON data before parsing."));
         return;
       }
 
@@ -29,15 +29,65 @@
         ...(options || {}),
       };
 
-      // TOAD snapshots are expected as tab-delimited text. Keep parsing strict.
-      const parsed = parseDelimitedText(text, fileName || "pasted.tsv", parsedOptions);
-      if (parsed.error) {
-        reject(new Error(parsed.error));
+      if (looksLikeJsonText(text)) {
+        resolve(parseRawTextDataset(text, fileName || "pasted.txt"));
         return;
       }
 
-      resolve(parsed.value);
+      const parsedJson = parseJsonText(text, fileName || "pasted.json", parsedOptions);
+      if (!parsedJson.error) {
+        resolve(parsedJson.value);
+        return;
+      }
+
+      // TOAD snapshots are expected as tab-delimited text. Keep parsing strict.
+      const parsed = parseDelimitedText(text, fileName || "pasted.tsv", parsedOptions);
+      if (!parsed.error) {
+        resolve(parsed.value);
+        return;
+      }
+
+      resolve(parseRawTextDataset(text, fileName || "pasted.txt"));
     });
+  }
+
+  function parseJsonText(rawText, fileName, options) {
+    const text = String(rawText || "").trim();
+    if (!text || !/^[\[{]/.test(text)) {
+      return { error: "Input is not JSON." };
+    }
+
+    const candidates = buildJsonCandidates(text);
+    for (let i = 0; i < candidates.length; i += 1) {
+      const candidate = candidates[i];
+      let parsed;
+      try {
+        parsed = JSON.parse(candidate);
+      } catch (error) {
+        continue;
+      }
+
+      if (Array.isArray(parsed)) {
+        if (!parsed.length) {
+          return { error: "The pasted JSON array is empty." };
+        }
+
+        if (parsed.every((item) => isPlainObject(item))) {
+          return buildDatasetFromObjectArray(parsed, rawText, fileName);
+        }
+
+        if (parsed.every((item) => Array.isArray(item))) {
+          return buildDatasetFromArrayRows(parsed, rawText, fileName, options);
+        }
+      }
+
+      if (isPlainObject(parsed)) {
+        return buildDatasetFromObjectArray([parsed], rawText, fileName);
+      }
+
+      return { error: "JSON format unsupported for tabular comparison." };
+    }
+    return { error: "Input is not valid JSON." };
   }
 
   function parseCsvInput(input, fileName, reject, resolve) {
@@ -92,7 +142,7 @@
     const lines = text.split("\n").filter((line) => line.trim().length > 0);
 
     if (!lines.length) {
-      return { error: "Paste a CSV block before parsing." };
+      return { error: "Paste CSV or JSON data before parsing." };
     }
 
     const tokenized = lines.map((line) => splitDelimitedLine(line, delimiter).map((cell) => Utils.normalizeCellValue(cell)));
@@ -166,6 +216,176 @@
       .trim();
 
     return normalized.split(/ {2,}/);
+  }
+
+  function buildDatasetFromObjectArray(items, rawText, fileName) {
+    const headerSet = new Set();
+    items.forEach((item) => {
+      Object.keys(item).forEach((key) => {
+        const normalized = Utils.normalizeHeader(key);
+        if (normalized) {
+          headerSet.add(normalized);
+        }
+      });
+    });
+
+    const headers = [...headerSet];
+    if (!headers.length) {
+      return { error: `"${fileName}" does not contain headers.` };
+    }
+
+    const rows = items.map((item) => {
+      const normalized = {};
+      headers.forEach((header) => {
+        normalized[header] = toCellValue(item[header]);
+      });
+      return normalized;
+    });
+
+    return {
+      value: {
+        file: rawText,
+        fileName,
+        headers,
+        rows,
+        errors: [],
+      },
+    };
+  }
+
+  function buildDatasetFromArrayRows(lines, rawText, fileName, options) {
+    const rows = lines.map((line) => line.map((cell) => Utils.normalizeCellValue(cell)));
+    const maxColumns = rows.reduce((max, row) => Math.max(max, row.length), 0);
+    if (!maxColumns) {
+      return { error: "The pasted block does not contain columns." };
+    }
+
+    let headers = [];
+    let dataRows = rows;
+    if (options.hasHeader) {
+      headers = (rows[0] || []).map((header) => Utils.normalizeHeader(header)).filter(Boolean);
+      if (!headers.length) {
+        return { error: `"${fileName}" does not contain headers.` };
+      }
+      dataRows = rows.slice(1);
+    } else {
+      headers = Array.from({ length: maxColumns }, (_, index) => `Col_${index + 1}`);
+    }
+
+    if (!headers.length) {
+      return { error: `"${fileName}" does not contain headers.` };
+    }
+
+    const normalizedRows = dataRows.map((row) => {
+      const record = {};
+      headers.forEach((header, index) => {
+        record[header] = Utils.normalizeCellValue(row[index] ?? "");
+      });
+      return record;
+    });
+
+    return {
+      value: {
+        file: rawText,
+        fileName,
+        headers,
+        rows: normalizedRows,
+        errors: [],
+      },
+    };
+  }
+
+  function toCellValue(value) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    if (typeof value === "object") {
+      try {
+        return JSON.stringify(value);
+      } catch (error) {
+        return Utils.normalizeCellValue(String(value));
+      }
+    }
+    return Utils.normalizeCellValue(value);
+  }
+
+  function isPlainObject(value) {
+    return Object.prototype.toString.call(value) === "[object Object]";
+  }
+
+  function buildJsonCandidates(text) {
+    const candidates = [];
+    const trimmed = String(text || "").trim();
+    if (!trimmed) {
+      return candidates;
+    }
+
+    candidates.push(trimmed);
+
+    const noTrailingComma = trimmed.replace(/,\s*$/, "");
+    if (noTrailingComma !== trimmed) {
+      candidates.push(noTrailingComma);
+    }
+
+    // Accept pasted object streams like:
+    // {...}
+    // {...}
+    // or
+    // {...},
+    // {...},
+    const wrapped = `[${noTrailingComma}]`;
+    candidates.push(wrapped);
+
+    return uniqueCandidates(candidates);
+  }
+
+  function uniqueCandidates(values) {
+    const seen = new Set();
+    const out = [];
+    values.forEach((value) => {
+      if (!value || seen.has(value)) {
+        return;
+      }
+      seen.add(value);
+      out.push(value);
+    });
+    return out;
+  }
+
+  function parseRawTextDataset(rawText, fileName) {
+    const lines = extractTextRecords(rawText);
+    const rows = lines.map((value, index) => ({
+      Line: String(index + 1),
+      Value: Utils.normalizeCellValue(value),
+    }));
+
+    return {
+      file: rawText,
+      fileName,
+      headers: ["Line", "Value"],
+      rows,
+      errors: [],
+    };
+  }
+
+  function looksLikeJsonText(text) {
+    return /^\s*[\[{]/.test(String(text || ""));
+  }
+
+  function extractTextRecords(rawText) {
+    const text = String(rawText || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    const lines = text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .filter((line) => !/^[\[\]\{\}\s,]+$/.test(line))
+      .map((line) => line.replace(/,\s*$/, ""));
+
+    if (!lines.length) {
+      return [];
+    }
+
+    return lines;
   }
 
   function validateCsvFile(file) {

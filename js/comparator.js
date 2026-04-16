@@ -44,14 +44,31 @@
       const entryB = indexB.index.get(keyValue);
       if (!entryB) {
         deletedRecords += 1;
-        discrepancies.push({
-          type: "deleted",
-          status: "Deleted",
-          keyValue,
-          attribute: "Record",
-          valueA: "Present",
-          valueB: "Missing",
-          note: "Exists only in dataset A.",
+        const attributesA = headersA.filter((header) => header !== key);
+        if (!attributesA.length) {
+          discrepancies.push({
+            type: "deleted",
+            status: "Deleted",
+            keyValue,
+            attribute: "Record",
+            valueA: "Present",
+            valueB: "Missing",
+            note: "Exists only in dataset A.",
+          });
+          continue;
+        }
+
+        attributesA.forEach((header) => {
+          const valueA = Utils.normalizeCellValue(entryA.row[header]);
+          discrepancies.push({
+            type: "deleted",
+            status: "Deleted",
+            keyValue,
+            attribute: header,
+            valueA: valueA || "N/A",
+            valueB: "Missing",
+            note: "Value exists only in dataset A.",
+          });
         });
         continue;
       }
@@ -82,19 +99,36 @@
       }
     }
 
-    for (const [keyValue] of indexB.index.entries()) {
+    for (const [keyValue, entryB] of indexB.index.entries()) {
       if (indexA.index.has(keyValue)) {
         continue;
       }
       newRecords += 1;
-      discrepancies.push({
-        type: "new",
-        status: "New",
-        keyValue,
-        attribute: "Record",
-        valueA: "Missing",
-        valueB: "Present",
-        note: "Exists only in dataset B.",
+      const attributesB = headersB.filter((header) => header !== key);
+      if (!attributesB.length) {
+        discrepancies.push({
+          type: "new",
+          status: "New",
+          keyValue,
+          attribute: "Record",
+          valueA: "Missing",
+          valueB: "Present",
+          note: "Exists only in dataset B.",
+        });
+        continue;
+      }
+
+      attributesB.forEach((header) => {
+        const valueB = Utils.normalizeCellValue(entryB.row[header]);
+        discrepancies.push({
+          type: "new",
+          status: "New",
+          keyValue,
+          attribute: header,
+          valueA: "Missing",
+          valueB: valueB || "N/A",
+          note: "Value exists only in dataset B.",
+        });
       });
     }
 

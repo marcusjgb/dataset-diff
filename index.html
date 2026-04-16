@@ -48,14 +48,14 @@
           </label>
           <input id="file-a-input" class="sr-only" type="file" accept=".csv,text/csv" />
           <div class="paste-box">
-            <label class="paste-box__label" for="paste-a-input">Or paste CSV for Dataset A</label>
+            <label class="paste-box__label" for="paste-a-input">Or paste CSV/JSON for Dataset A</label>
             <label class="paste-box__toggle">
               <input id="paste-a-has-header" type="checkbox" />
               <span>Los datos incluyen headers</span>
             </label>
-            <textarea id="paste-a-input" class="paste-box__textarea" rows="8" placeholder="Paste CSV content here"></textarea>
-            <p class="paste-box__hint">Modo TOAD: separador por tab estricto.</p>
-            <button id="paste-a-btn" class="button button--secondary button--small" type="button">Use pasted CSV</button>
+            <textarea id="paste-a-input" class="paste-box__textarea" rows="8" placeholder="Paste CSV (TOAD) or JSON content here"></textarea>
+            <p class="paste-box__hint">Modo TOAD: separador por tab estricto. JSON (objeto/arreglo) tambien soportado.</p>
+            <button id="paste-a-btn" class="button button--secondary button--small" type="button">Use pasted data</button>
           </div>
           <div id="file-a-details" class="upload-card__details">Awaiting upload.</div>
         </div>
@@ -72,14 +72,14 @@
           </label>
           <input id="file-b-input" class="sr-only" type="file" accept=".csv,text/csv" />
           <div class="paste-box">
-            <label class="paste-box__label" for="paste-b-input">Or paste CSV for Dataset B</label>
+            <label class="paste-box__label" for="paste-b-input">Or paste CSV/JSON for Dataset B</label>
             <label class="paste-box__toggle">
               <input id="paste-b-has-header" type="checkbox" />
               <span>Los datos incluyen headers</span>
             </label>
-            <textarea id="paste-b-input" class="paste-box__textarea" rows="8" placeholder="Paste CSV content here"></textarea>
-            <p class="paste-box__hint">Modo TOAD: separador por tab estricto.</p>
-            <button id="paste-b-btn" class="button button--secondary button--small" type="button">Use pasted CSV</button>
+            <textarea id="paste-b-input" class="paste-box__textarea" rows="8" placeholder="Paste CSV (TOAD) or JSON content here"></textarea>
+            <p class="paste-box__hint">Modo TOAD: separador por tab estricto. JSON (objeto/arreglo) tambien soportado.</p>
+            <button id="paste-b-btn" class="button button--secondary button--small" type="button">Use pasted data</button>
           </div>
           <div id="file-b-details" class="upload-card__details">Awaiting upload.</div>
         </div>
