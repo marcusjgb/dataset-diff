@@ -39,3 +39,4 @@ node_modules/
 # Project-specific
 *.local
 stitch_minimalist_csv_comparator/
+dataset-diff-mvp.md
